@@ -11,7 +11,7 @@ commands:
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
 
-  save_hello_world_output:
+  fail_job:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
@@ -19,25 +19,11 @@ jobs:
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
-      - checkout
+      - run: "return 1"
       - run:
-          name: "Say hello"
-          command: "echo 'Hello, world!' > /tmp/output.txt"
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - output.txt
-
-  print_output_file:
-    docker: 
-      - image: circleci/node:13.8.0
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: 'print workspace'
-          command: 'cat /tmp/output.txt'
+          name: 'on failure'
+          command: 'echo "this failed!"'
+          when: on_fail
 
   print_pipeline_id:
     docker: 
@@ -50,7 +36,4 @@ jobs:
 workflows:
   say-hello-workflow:
     jobs:
-      - save_hello_world_output
-      - print_output_file:
-         requires: [save_hello_world_output]
-      - print_pipeline_id
+      - fail_job
