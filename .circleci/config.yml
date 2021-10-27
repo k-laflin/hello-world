@@ -115,19 +115,19 @@ jobs:
               --stack-name production-distroy \
               --parameter-overrides PipeliineID="mybucket-${CIRCLE_WORKFLOW_ID}"
 
-    clean_up_old_frontend:
-      docker:
-        - image: amazon/aws-cli
-      steps:
-        - checkout
-        - run: yum install -y tar gzip
-        - attach_workspace:
-            at: ~/
-        - run: 
-            name: destroy previous prod S3 bucket and CloudFormation stack
-            command: |
-                export OldBucketID=$(cat ~/textfile.txt)
-                aws s3 rm "s3://${OldBucketID}" --recursive
+  clean_up_old_frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run: 
+          name: destroy previous prod S3 bucket and CloudFormation stack
+          command: |
+              export OldBucketID=$(cat ~/textfile.txt)
+              aws s3 rm "s3://${OldBucketID}" --recursive
 
 workflows:
   say-hello-workflow:
