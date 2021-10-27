@@ -25,7 +25,7 @@ jobs:
           command: apk add ansible
       - run:
           name: run playbook
-          command: ansible-playbook -i inventory.txt ansible/main-remote.yml
+          command: ansible-playbook -i ansible/inventory.txt ansible/main-remote.yml
 
 workflows:
   say-hello-workflow:
