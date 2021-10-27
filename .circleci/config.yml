@@ -112,7 +112,7 @@ jobs:
           command: |
               aws cloudformation deploy \
               --template-file prep_files/cloudfront.yml \
-              --stack-name production-distroy \
+              --stack-name production-distro \
               --parameter-overrides PipelineID="mybucket-${CIRCLE_WORKFLOW_ID}"
 
   clean_up_old_frontend:
