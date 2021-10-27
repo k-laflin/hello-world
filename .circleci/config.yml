@@ -10,7 +10,7 @@ jobs:
     steps:
       - checkout 
       - run: |
-              aws cloudformation deploy --stack-name infra --template-file file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
+              aws cloudformation deploy --stack-name infra --template-file template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
   
   configure_infrastructure:
     docker:
