@@ -9,8 +9,8 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout 
-      - aws-cli/setup:
-          profile-name: circleci
+      # - aws-cli/setup:
+      #     profile-name: circleci
       - run: |
               aws cloudformation create-stack --stack-name infra --template-body file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
 
