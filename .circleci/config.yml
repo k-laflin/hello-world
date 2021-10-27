@@ -10,13 +10,22 @@ jobs:
     steps:
       - checkout 
       - run: |
-              aws cloudformation create-stack --stack-name infra --template-body file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
+              aws cloudformation deploy --stack-name infra --template-file file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
   
   configure_infrastructure:
     docker:
       - image: python:3.7-alpine3.11
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "3d:5c:4d:8e:b3:73:25:cc:5b:1b:d6:74:af:50:0b:d9"
+      - run: 
+          name: install ansible
+          command: apk add ansible
+      - run:
+          name: run playbook
+          command: ansible-playbook -i inventory.txt ansible/main-remote.yml
 
 workflows:
   say-hello-workflow:

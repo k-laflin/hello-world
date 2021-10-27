@@ -1,0 +1,6 @@
+---
+- name: test apache install
+  hosts: all
+  user: ubuntu
+  roles:
+    - apache
