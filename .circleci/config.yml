@@ -22,7 +22,7 @@ jobs:
             - "3d:5c:4d:8e:b3:73:25:cc:5b:1b:d6:74:af:50:0b:d9"
       - run: 
           name: install ansible
-          command: apk add ansible
+          command: apk add --update ansible
       - run:
           name: run playbook
           command: ansible-playbook -i ansible/inventory ansible/main-remote.yml
