@@ -27,9 +27,40 @@ jobs:
           name: run playbook
           command: ansible-playbook -i ansible/inventory ansible/main-remote.yml
 
+  smoke_test:
+    docker:
+      - image: alpine:latest
+    steps:
+      - checkout
+      - run: 
+          name: install curl
+          command: apk add curl
+      - run:
+          name: smoke test 1
+          command: |
+                    if curl -s --head "34.217.31.208:3000" 
+                    then
+                      echo "It worked!"
+                    else
+                      echo "It failed"
+                      exit 1
+                    fi 
+      - run:
+          name: smoke test 2
+          command: |
+                    if curl -s --head "34.217.31.208:80" 
+                    then
+                      echo "It worked!"
+                    else
+                      echo "It failed"
+                      exit 1
+                    fi 
+
 workflows:
   say-hello-workflow:
     jobs:
-      - create_infrastructure
-      - configure_infrastructure: 
-         requires: [create_infrastructure]
+      #- create_infrastructure
+      - configure_infrastructure
+         #requires: [create_infrastructure]
+      - smoke_test:
+          requires: [configure_infrastructure]
