@@ -111,7 +111,7 @@ jobs:
           name: execute cloudfront.yml
           command: |
               aws cloudformation deploy \
-              --template-file cloudfront.yml \
+              --template-file prep_files/cloudfront.yml \
               --stack-name production-distroy \
               --parameter-overrides PipeliineID="mybucket-${CIRCLE_WORKFLOW_ID}"
 
