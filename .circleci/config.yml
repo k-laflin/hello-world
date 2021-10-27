@@ -9,12 +9,18 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout 
-      # - aws-cli/setup:
-      #     profile-name: circleci
       - run: |
               aws cloudformation create-stack --stack-name infra --template-body file://template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
+  
+  configure_infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
 
 workflows:
   say-hello-workflow:
     jobs:
       - create_infrastructure
+      - configure_infrastructure: 
+         requires: [create_infrastructure]
