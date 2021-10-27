@@ -19,7 +19,9 @@ jobs:
     steps:
       - checkout 
       - run: |
-              aws cloudformation deploy --stack-name prod-${CIRCLE_WORKFLOW_ID} --template-file template.yml --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
+              aws cloudformation deploy --stack-name prod-${CIRCLE_WORKFLOW_ID} --template-file prep_files/template.yml \
+               --parameter-overrides NAME="${CIRCLE_WORKFLOW_ID}" \
+               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
   
   configure_infrastructure:
     docker:
@@ -66,23 +68,81 @@ jobs:
                     fi 
       - destroy-environment
 
-  smoke_test_failure:
+  create_and_deploy_frontend:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
       - run: 
-          name: simulate failure
-          command: exit 1
-      - destroy-environment
+          name: Execute bucket.yml
+          command: |
+                aws cloudformation deploy \
+                --template-file prep_files/bucket.yml \
+                --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID} \
+                --parameter-overrides MyBucketName="mybucket-${CIRCLE_WORKFLOW_ID}"
+      - run:
+          name: add website vs 2 html
+          command: |
+            aws s3 cp prep_files/index2.html "s3://mybucket-${CIRCLE_WORKFLOW_ID}/index.html"
+
+  get_last_deployment_id:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - run: 
+          name: fetch & save old pipeline ID (bucket name) responsible for latest release
+          command: |
+              aws cloudformation \
+              list-exports --query "Exports[?Name==\`PipelineID\`].Value" \
+              --no-paginate --output text > ~/textfile.txt
+      - persist_to_workspace:
+          root: ~/
+          paths: 
+            - textfile.txt
+
+  promote_to_production:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: execute cloudfront.yml
+          command: |
+              aws cloudformation deploy \
+              --template-file cloudfront.yml \
+              --stack-name production-distroy \
+              --parameter-overrides PipeliineID="mybucket-${CIRCLE_WORKFLOW_ID}"
+
+    clean_up_old_frontend:
+      docker:
+        - image: amazon/aws-cli
+      steps:
+        - checkout
+        - run: yum install -y tar gzip
+        - attach_workspace:
+            at: ~/
+        - run: 
+            name: destroy previous prod S3 bucket and CloudFormation stack
+            command: |
+                export OldBucketID=$(cat ~/textfile.txt)
+                aws s3 rm "s3://${OldBucketID}" --recursive
 
 workflows:
   say-hello-workflow:
     jobs:
-      - create_infrastructure
+      - create_and_deploy_frontend
+      - get_last_deployment_id:
+          requires: [create_and_deploy_frontend]
+      - promote_to_production:
+          requires: [get_last_deployment_id]
+      - clean_up_old_frontend:
+          requires: [promote_to_production]
+      #- create_infrastructure
       #- configure_infrastructure
          #requires: [create_infrastructure]
       #- smoke_test:
       #    requires: [configure_infrastructure]
-      - smoke_test_failure:
-          requires: [create_infrastructure]
+      #- smoke_test_failure:
+         # requires: [create_infrastructure]
