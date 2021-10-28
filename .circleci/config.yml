@@ -5,11 +5,27 @@ orbs:
       
 commands:
   destroy-environment:
+    parameters:
+      stack_name:
+        type: string
+        default: prod-${CIRCLE_WORKFLOW_ID}
     steps:
       - run: 
           name: Destory environment
           command: |
-            aws cloudformation delete-stack --stack-name prod-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
+          when: on_fail
+
+  delete-old-frontend:
+    parameters:
+      stack_name:
+        type: string
+        default: prod-${CIRCLE_WORKFLOW_ID}
+    steps:
+      - run: 
+          name: Destory environment
+          command: |
+            aws cloudformation delete-stack --stack-name << parameters.stack_name >>
           when: on_fail
 
 jobs:
