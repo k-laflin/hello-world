@@ -128,6 +128,7 @@ jobs:
           command: |
               export OldBucketID=$(cat ~/textfile.txt)
               aws s3 rm "s3://${OldBucketID}" --recursive
+              aws s3api delete-bucket --bucket ${OldBucketID}
 
 workflows:
   say-hello-workflow:
