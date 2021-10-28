@@ -134,10 +134,9 @@ workflows:
   say-hello-workflow:
     jobs:
       - create_and_deploy_frontend
-      - get_last_deployment_id:
-          requires: [create_and_deploy_frontend]
+      - get_last_deployment_id
       - promote_to_production:
-          requires: [get_last_deployment_id]
+          requires: [get_last_deployment_id, create_and_deploy_frontend]
       - clean_up_old_frontend:
           requires: [promote_to_production]
       #- create_infrastructure
