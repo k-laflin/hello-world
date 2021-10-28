@@ -94,7 +94,7 @@ jobs:
           command: |
                 aws cloudformation deploy \
                 --template-file prep_files/bucket.yml \
-                --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID} \
+                --stack-name stack-create-mybucket-${CIRCLE_WORKFLOW_ID} \
                 --parameter-overrides MyBucketName="mybucket-${CIRCLE_WORKFLOW_ID}"
       - run: 
           name: create new html
@@ -120,17 +120,31 @@ jobs:
           command: |
               aws cloudformation \
               list-exports --query "Exports[?Name==\`PipelineID\`].Value" \
-              --no-paginate --output text > ~/textfile.txt
+              --no-paginate --output text > ~/pipeline.txt
+      - run: 
+          name: fetch & save CDN name
+          command: |
+              aws cloudformation \
+              list-exports --query "Exports[?Name==\`CDN\`].Value" \
+              --no-paginate --output text > ~/cdn.txt
       - persist_to_workspace:
           root: ~/
           paths: 
-            - textfile.txt
+            - pipeline.txt
+            - cdn.txt
 
   promote_to_production:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
+      - run: 
+          name: save cdn name
+          command: |
+              export cdn=$(cat ~/cdn.txt)
+              echo $cdn
       - run:
           name: execute cloudfront.yml
           command: |
@@ -138,6 +152,9 @@ jobs:
               --template-file prep_files/cloudfront.yml \
               --stack-name production-distro \
               --parameter-overrides PipelineID="mybucket-${CIRCLE_WORKFLOW_ID}"
+      - run:
+          name: refresh distribution
+          command: aws cloudfront create-invalidation --distribution-id $cdn --paths "/*"
 
   clean_up_old_frontend:
     docker:
@@ -150,7 +167,7 @@ jobs:
       - run: 
           name: destroy previous prod S3 bucket and CloudFormation stack
           command: |
-              export OldBucketID=$(cat ~/textfile.txt)
+              export OldBucketID=$(cat ~/pipeline.txt)
               echo $OldBucketID
               aws s3 rm "s3://${OldBucketID}" --recursive
               aws s3api delete-bucket --bucket ${OldBucketID}

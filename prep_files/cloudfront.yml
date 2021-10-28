@@ -17,7 +17,7 @@ Resources:
           - DomainName: !Sub "${PipelineID}.s3-website-us-west-2.amazonaws.com"
             Id: webpage
             CustomOriginConfig:
-              OriginProtocolPolicy: match-viewer
+              OriginProtocolPolicy: http-only
             #S3OriginConfig:
             #  OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
         Enabled: True
@@ -32,3 +32,7 @@ Outputs:
     Value: !Sub ${PipelineID}
     Export:
       Name: PipelineID
+  CDN:
+    Value: !Ref WebpageCDN
+    Export:
+      Name: CDN
