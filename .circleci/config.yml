@@ -173,15 +173,42 @@ jobs:
               aws s3 rm "s3://${OldBucketID}" --recursive
               aws s3api delete-bucket --bucket ${OldBucketID}
 
+  test:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: get name
+          command: | 
+              aws cloudformation \
+              list-exports --query "Exports[?Name==\`CDN\`].Value" \
+              --no-paginate --output text > ~/cdn.txt
+      - run:
+          name: read name
+          command: | 
+              cat ~/cdn.txt
+              export CDN=$(cat ~/cdn.txt)
+              echo $CDN
+              aws cloudfront create-invalidation --distribution-id "${CDN}" --paths "/*"
+
 workflows:
-  say-hello-workflow:
+  test:
     jobs:
-      - create_and_deploy_frontend
-      - get_last_deployment_id
-      - promote_to_production:
-          requires: [get_last_deployment_id, create_and_deploy_frontend]
-      - clean_up_old_frontend:
-          requires: [promote_to_production]
+      - test
+  # say-hello-workflow:
+  #   jobs:
+  #     - create_and_deploy_frontend
+  #     - get_last_deployment_id
+  #     - promote_to_production:
+  #         requires: [get_last_deployment_id, create_and_deploy_frontend]
+  #     - clean_up_old_frontend:
+  #         requires: [promote_to_production]
+
+
       #- create_infrastructure
       #- configure_infrastructure
          #requires: [create_infrastructure]
