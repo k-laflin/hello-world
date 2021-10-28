@@ -96,10 +96,18 @@ jobs:
                 --template-file prep_files/bucket.yml \
                 --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID} \
                 --parameter-overrides MyBucketName="mybucket-${CIRCLE_WORKFLOW_ID}"
+      - run: 
+          name: create new html
+          command: |
+                echo "<html>
+                    <body>
+                      <h1>Hello World version ${CIRCLE_WORKFLOW_ID}</h1>
+                    </body>
+                    </html>" > ~/index.html
       - run:
           name: add website vs 2 html
           command: |
-            aws s3 cp prep_files/index2.html "s3://mybucket-${CIRCLE_WORKFLOW_ID}/index.html"
+            aws s3 cp ~/index.html "s3://mybucket-${CIRCLE_WORKFLOW_ID}/index.html"
 
   get_last_deployment_id:
     docker:

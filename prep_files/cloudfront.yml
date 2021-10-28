@@ -16,6 +16,8 @@ Resources:
         Origins:
           - DomainName: !Sub "${PipelineID}.s3-website-us-west-2.amazonaws.com"
             Id: webpage
+            CustomOriginConfig:
+              OriginProtocolPolicy: match-viewer
             #S3OriginConfig:
             #  OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
         Enabled: True
