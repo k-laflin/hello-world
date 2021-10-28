@@ -33,6 +33,6 @@ Outputs:
     Export:
       Name: PipelineID
   CDN:
-    Value: !Ref WebpageCDN
+    Value: !GetAtt WebpageCDN.Id
     Export:
       Name: CDN
