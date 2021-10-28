@@ -84,6 +84,8 @@ jobs:
                     fi 
       - destroy-environment
 
+
+##begin jobs for exercise 28 
   create_and_deploy_frontend:
     docker:
       - image: amazon/aws-cli
@@ -185,12 +187,12 @@ workflows:
       - get_last_deployment_id
       - promote_to_production:
           requires: [get_last_deployment_id, create_and_deploy_frontend]
-      - refresh-cdn:
+      - refresh_cdn:
           requires: [promote_to_production]
       - clean_up_old_frontend:
           requires: [promote_to_production]
 
-
+      ## previous lesson workflows 
       #- create_infrastructure
       #- configure_infrastructure
          #requires: [create_infrastructure]

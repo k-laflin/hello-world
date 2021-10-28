@@ -14,12 +14,11 @@ Resources:
     Properties:
       DistributionConfig:
         Origins:
+          ## below are changes from udacity provided solutions
           - DomainName: !Sub "${PipelineID}.s3-website-us-west-2.amazonaws.com"
             Id: webpage
             CustomOriginConfig:
               OriginProtocolPolicy: http-only
-            #S3OriginConfig:
-            #  OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
         Enabled: True
         DefaultRootObject: index.html
         DefaultCacheBehavior:
