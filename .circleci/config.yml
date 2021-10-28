@@ -105,7 +105,7 @@ jobs:
                     </body>
                     </html>" > ~/index.html
       - run:
-          name: add website vs 2 html
+          name: add website html to new bucket
           command: |
             aws s3 cp ~/index.html "s3://mybucket-${CIRCLE_WORKFLOW_ID}/index.html"
 
@@ -121,31 +121,16 @@ jobs:
               aws cloudformation \
               list-exports --query "Exports[?Name==\`PipelineID\`].Value" \
               --no-paginate --output text > ~/pipeline.txt
-      - run: 
-          name: fetch & save CDN name
-          command: |
-              aws cloudformation \
-              list-exports --query "Exports[?Name==\`CDN\`].Value" \
-              --no-paginate --output text > ~/cdn.txt
       - persist_to_workspace:
           root: ~/
           paths: 
             - pipeline.txt
-            - cdn.txt
 
   promote_to_production:
     docker:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - run: yum install -y tar gzip
-      - attach_workspace:
-          at: ~/
-      - run: 
-          name: save cdn name
-          command: |
-              export cdn=$(cat ~/cdn.txt)
-              echo $cdn
       - run:
           name: execute cloudfront.yml
           command: |
@@ -153,9 +138,6 @@ jobs:
               --template-file prep_files/cloudfront.yml \
               --stack-name production-distro \
               --parameter-overrides PipelineID="mybucket-${CIRCLE_WORKFLOW_ID}"
-      - run:
-          name: refresh distribution
-          command: aws cloudfront create-invalidation --distribution-id "${cdn}" --paths "/*"
 
   clean_up_old_frontend:
     docker:
@@ -172,8 +154,9 @@ jobs:
               echo $OldBucketID
               aws s3 rm "s3://${OldBucketID}" --recursive
               aws s3api delete-bucket --bucket ${OldBucketID}
+              aws cloudformation delete-stack --stack-name "stack-create-${OldBucketID}"
 
-  test:
+  refresh-cdn:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -196,17 +179,16 @@ jobs:
               aws cloudfront create-invalidation --distribution-id "${CDN}" --paths "/*"
 
 workflows:
-  test:
+  prod-overhall:
     jobs:
-      - test
-  # say-hello-workflow:
-  #   jobs:
-  #     - create_and_deploy_frontend
-  #     - get_last_deployment_id
-  #     - promote_to_production:
-  #         requires: [get_last_deployment_id, create_and_deploy_frontend]
-  #     - clean_up_old_frontend:
-  #         requires: [promote_to_production]
+      - create_and_deploy_frontend
+      - get_last_deployment_id
+      - promote_to_production:
+          requires: [get_last_deployment_id, create_and_deploy_frontend]
+      - refresh-cdn:
+          requires: [promote_to_production]
+      - clean_up_old_frontend:
+          requires: [promote_to_production]
 
 
       #- create_infrastructure
