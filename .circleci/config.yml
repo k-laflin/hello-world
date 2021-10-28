@@ -158,7 +158,7 @@ jobs:
               aws s3api delete-bucket --bucket ${OldBucketID}
               aws cloudformation delete-stack --stack-name "stack-create-${OldBucketID}"
 
-  refresh-cdn:
+  refresh_cdn:
     docker:
       - image: amazon/aws-cli
     steps:
